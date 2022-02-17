@@ -1,40 +1,13 @@
-const Sequelize = require('sequelize')
-const sequelize = new Sequelize (process.env.DATABASE_URL || 'postgres://localhost/restaurants_db')
-const STRING = Sequelize.DataTypes.STRING
-
-const Customer = sequelize.define('customer', {
-    name: {
-        type: STRING,
-        unique: true,
-        allowNull: false,
-        validate: {
-            notEmpty: true
-        }
-    }
-});
-
-const Order = sequelize.define('order', {
-    name: {
-        type: STRING,
-        unique: true,
-        allowNull: false,
-        validate: {
-            notEmpty: true
-        }
-    }
-});
-
-Customer.belongsTo(Order)
-Order.hasMany(Customer)
-
-
-
-
-
-
 const express = require('express')
 const app = express();
 const methodOverride = require('method-override')
+const path = require('path')
+const db = require('./db')
+const sequelize = db.sequelize;
+const Customer = db.Customer;
+const Order = db.Order;
+
+app.use('/public', express.static(path.join(__dirname,'public')));
 
 app.use(express.urlencoded( {extended: false}));
 app.get('/', (req, res) => res.redirect('/customers'));
@@ -68,7 +41,7 @@ app.get('/customers', async (req, res, next) => {
         return `
         <div>
          <ul>
-         <li> ${customer.name}
+         <li> ${customer.name} </li>
        
          <div>
           <a href= '/orders/${customer.orderId}'> ${customer.order.name} </a>
@@ -82,11 +55,13 @@ app.get('/customers', async (req, res, next) => {
    res.send(`
      <html>
        <head> 
+       <link rel = 'stylesheet' href='/public/style.css'/> 
         <title> Customer Orders </title>
        </head>
        <body>
       
-          <h1> All Orders at Fish Cheeks Restaurant </h1>
+          <h1 class='header'> All Orders at Fish Cheeks Restaurant </h1>
+          <div class='form'>
           <form method='POST'>
 
           <input name='name' placeholder='Customer Name' />
@@ -100,10 +75,10 @@ app.get('/customers', async (req, res, next) => {
            }
 
            </select>
-           <button> Add Order </button>
+           <button class='button'> Add Order </button>
           </form>
-
-           <ul>
+          </div>
+           <ul class='list'>
            
            ${html}
             
@@ -132,7 +107,7 @@ app.get('/orders/:id', async(req, res, next) => {
       <li>  ${customer.name} </li>
     </ul>
     <form method='POST' action='/customers/${customer.id}?_method=delete'>
-    <button> Order Completed </button>
+    <button class='button2'> Order Completed </button>
     </form>
     </div>
 
@@ -144,17 +119,20 @@ app.get('/orders/:id', async(req, res, next) => {
 res.send(`
  <html>
    <head> 
+    <link rel = 'stylesheet' href='/public/style.css'/> 
     <title> Fish Cheeks Orders </title>
    </head>
    <body>
-     <ul>
-      <h1> Order Fulfillment </h1>
-      <a href= '/customers'>Back to List of Orders</a>
-       <h1>
+     
+      <h1 class='header'> Order Fulfillment </h1>
+      <a class='link' href= '/customers'> < Full List of Orders </a>
+       <h1 class='name'>
         ${orders.name}
-        </h2>
+        </h1>
+        <div class='order2'>
        ${html}
-     </ul>
+       </div>
+     
    </body>
  </html>
 `)
