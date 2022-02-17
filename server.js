@@ -7,143 +7,67 @@ const sequelize = db.sequelize;
 const Customer = db.Customer;
 const Order = db.Order;
 
+
 app.use('/public', express.static(path.join(__dirname,'public')));
 
 app.use(express.urlencoded( {extended: false}));
 app.get('/', (req, res) => res.redirect('/customers'));
 app.use(methodOverride('_method'));
 
-app.delete('/customers/:id', async (req, res, next) => {
-   const customer = await Customer.findByPk(req.params.id);
-   await customer.destroy();
-     res.redirect(`/orders/${customer.orderId}`)
-})
-
-app.post('/customers', async (req, res, next) => {
-   try {
-     const customer = await Customer.create(req.body);
-     res.redirect(`/orders/${customer.orderId}`) 
-   }
-   catch (ex){
-      next(ex)
-   }
-});
-
-app.get('/customers', async (req, res, next) => {
-  try {
-    const customers = await Customer.findAll({
-        include: [ Order ]
-    })   
-
-    const orders = await Order.findAll();
-    
-    const html = customers.map( customer=> {
-        return `
-        <div>
-         <ul>
-         <li> ${customer.name} </li>
-       
-         <div>
-          <a href= '/orders/${customer.orderId}'> ${customer.order.name} </a>
-          </div>
-          </li>
-          </ul>
-        </div>
-        `;
-    }).join('');
-
-   res.send(`
-     <html>
-       <head> 
-       <link rel = 'stylesheet' href='/public/style.css'/> 
-        <title> Customer Orders </title>
-       </head>
-       <body>
-      
-          <h1 class='header'> All Orders at Fish Cheeks Restaurant </h1>
-          <div class='form'>
-          <form method='POST'>
-
-          <input name='name' placeholder='Customer Name' />
-          <select name='orderId'>
-           ${
-              orders.map( order => {
-                 return `
-                  <option value='${order.id}'> ${order.name}</option>
-                 `
-              } ).join('')
-           }
-
-           </select>
-           <button class='button'> Add Order </button>
-          </form>
-          </div>
-           <ul class='list'>
-           
-           ${html}
-            
-         </ul>
-       </body>
-     </html>
-   `)
-
-  }
-  catch (ex) {
-    next(ex)
-  }
-});
+app.use('/customers', require('./customers.routes'));
+app.use('/orders', require ('./orders.routes'));
 
 
-app.get('/orders/:id', async(req, res, next) => {
-  try {
-    const orders = await Order.findByPk(req.params.id, {
-      include: [ Customer ]
-   });
+// app.get('/orders/:id', async(req, res, next) => {
+//   try {
+//     const orders = await Order.findByPk(req.params.id, {
+//       include: [ Customer ]
+//    });
 
-   const html = orders.customers.map( customer=> {
-    return `
-    <div>
-    <ul>
-      <li>  ${customer.name} </li>
-    </ul>
-    <form method='POST' action='/customers/${customer.id}?_method=delete'>
-    <button class='button2'> Order Completed </button>
-    </form>
-    </div>
-
-
-    `;
-}).join('');
+//    const html = orders.customers.map( customer=> {
+//     return `
+//     <div>
+//     <ul>
+//       <li>  ${customer.name} </li>
+//     </ul>
+//     <form method='POST' action='/customers/${customer.id}?_method=delete'>
+//     <button class='button2'> Order Completed </button>
+//     </form>
+//     </div>
 
 
-res.send(`
- <html>
-   <head> 
-    <link rel = 'stylesheet' href='/public/style.css'/> 
-    <title> Fish Cheeks Orders </title>
-   </head>
-   <body>
+//     `;
+// }).join('');
+
+
+// res.send(`
+//  <html>
+//    <head> 
+//     <link rel = 'stylesheet' href='/public/style.css'/> 
+//     <title> Fish Cheeks Orders </title>
+//    </head>
+//    <body>
      
-      <h1 class='header'> Order Fulfillment </h1>
-      <a class='link' href= '/customers'> < Full List of Orders </a>
-       <h1 class='name'>
-        ${orders.name}
-        </h1>
-        <div class='order2'>
-       ${html}
-       </div>
+//       <h1 class='header'> Order Fulfillment </h1>
+//       <a class='link' href= '/customers'> < Full List of Orders </a>
+//        <h1 class='name'>
+//         ${orders.name}
+//         </h1>
+//         <div class='order2'>
+//        ${html}
+//        </div>
      
-   </body>
- </html>
-`)
+//    </body>
+//  </html>
+// `)
 
-}
-  catch (ex) {
-    next(ex)
-  }
+// }
+//   catch (ex) {
+//     next(ex)
+//   }
 
 
-});
+// });
 
 
 
